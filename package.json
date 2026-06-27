@@ -1,27 +1,26 @@
 {
-  "name": "albert-portfolio-platform",
+  "name": "portfolio-frontend",
   "private": true,
   "version": "1.0.0",
+  "homepage": "https://albertmugisha.me",
+  "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace frontend\" \"npm run dev --workspace backend\"",
-    "build": "npm run build --workspace frontend && npm run build --workspace backend",
-    "start": "npm run start --workspace backend",
-    "seed": "npm run seed --workspace backend",
-    "prisma:generate": "prisma generate --schema backend/prisma/schema.prisma",
-    "prisma:migrate": "prisma migrate dev --schema backend/prisma/schema.prisma",
-    "prisma:deploy": "prisma migrate deploy --schema backend/prisma/schema.prisma",
-    "prisma:studio": "prisma studio --schema backend/prisma/schema.prisma"
-  },
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
-  "devDependencies": {
-    "concurrently": "^8.2.2",
-    "prisma": "^5.22.0",
-    "typescript": "^5.6.3"
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "deploy": "gh-pages -d dist",
+    "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0"
+    "@vitejs/plugin-react": "^6.0.2",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^8.0.16"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "gh-pages": "^6.3.0",
+    "typescript": "^5.6.3"
   }
 }
