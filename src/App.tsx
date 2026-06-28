@@ -3,7 +3,9 @@ import { Activity, ArrowUpRight, Briefcase, Code2, Database, Download, Github, G
 import { certificates, education, experience, profile, projects, skills } from "./lib/content";
 import { AdminDashboard } from "./components/AdminDashboard";
 
-const apiBase = import.meta.env.VITE_API_URL ?? "/api";
+const configuredApiBase = (import.meta.env.VITE_API_URL ?? "").trim();
+const hasBackend = configuredApiBase.length > 0;
+const apiBase = configuredApiBase;
 
 export function App() {
   const [contactState, setContactState] = useState<"idle" | "sending" | "sent" | "error">("idle");
@@ -21,6 +23,8 @@ export function App() {
   }, [isDark]);
 
   useEffect(() => {
+    if (!hasBackend) return;
+
     fetch(`${apiBase}/blogs`)
       .then((r) => r.json())
       .then((d) => { if (d.blogs) setBlogs(d.blogs); })
@@ -28,6 +32,8 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (!hasBackend) return;
+
     fetch(`${apiBase}/resumes/active`)
       .then((r) => r.json())
       .then((d) => { if (d.resume) setActiveResume(d.resume); })
@@ -47,7 +53,6 @@ export function App() {
 
   async function submitContact(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setContactState("sending");
     const form = new FormData(event.currentTarget);
     const payload = {
       name: form.get("name") as string,
@@ -55,6 +60,17 @@ export function App() {
       subject: form.get("subject") as string,
       message: form.get("message") as string
     };
+
+    if (!hasBackend) {
+      const subject = encodeURIComponent(payload.subject || "Portfolio contact");
+      const body = encodeURIComponent(`Name: ${payload.name}\nEmail: ${payload.email}\n\n${payload.message}`);
+      window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
+      setContactState("sent");
+      setTimeout(() => setContactState("idle"), 3000);
+      return;
+    }
+
+    setContactState("sending");
     try {
       const response = await fetch(`${apiBase}/contact`, {
         method: "POST",
@@ -77,7 +93,7 @@ export function App() {
     { href: "#skills", label: "Skills" },
     { href: "#projects", label: "Projects" },
     { href: "#experience", label: "Experience" },
-    { href: "#blog", label: "Blog" },
+    ...(hasBackend ? [{ href: "#blog", label: "Blog" }] : []),
     { href: "#contact", label: "Contact" }
   ];
 
@@ -240,7 +256,7 @@ export function App() {
         </section>
 
         {/* ── Blog ── */}
-        {blogs.length > 0 && (
+        {hasBackend && blogs.length > 0 && (
           <section className="section blogSection" id="blog">
             <p className="eyebrow">Writing</p>
             <h2>Blog</h2>
@@ -264,22 +280,23 @@ export function App() {
         )}
 
         {/* ── Admin ── */}
-        <section className="section" id="admin">
-          <div className="sectionHead">
-            <div>
-              <p className="eyebrow">Backend platform</p>
-              <h2>Admin dashboard</h2>
+        {hasBackend && (
+          <section className="section" id="admin">
+            <div className="sectionHead">
+              <div>
+                <p className="eyebrow">Backend platform</p>
+                <h2>Admin dashboard</h2>
+              </div>
             </div>
-  
-          </div>
-          <div className="adminGrid">
-            <AdminFeature icon={<LayoutDashboard />} title="Content management" text="Projects, blogs, testimonials, resumes, media, categories, and tags." />
-            <AdminFeature icon={<Shield />} title="Security" text="JWT auth, hashed passwords, role checks, validation, rate limiting, CORS, and audit logs." />
-            <AdminFeature icon={<Activity />} title="Analytics" text="Page visits, project views, blog views, contact submissions, resume downloads, and GitHub cache." />
-            <AdminFeature icon={<Download />} title="Resume management" text="Visitors can download the active CV with download tracking and version control." />
-          </div>
-          <AdminDashboard apiBase={apiBase} />
-        </section>
+            <div className="adminGrid">
+              <AdminFeature icon={<LayoutDashboard />} title="Content management" text="Projects, blogs, testimonials, resumes, media, categories, and tags." />
+              <AdminFeature icon={<Shield />} title="Security" text="JWT auth, hashed passwords, role checks, validation, rate limiting, CORS, and audit logs." />
+              <AdminFeature icon={<Activity />} title="Analytics" text="Page visits, project views, blog views, contact submissions, resume downloads, and GitHub cache." />
+              <AdminFeature icon={<Download />} title="Resume management" text="Visitors can download the active CV with download tracking and version control." />
+            </div>
+            <AdminDashboard apiBase={apiBase} />
+          </section>
+        )}
 
         {/* ── Contact ── */}
         <section className="section contact" id="contact">
@@ -301,9 +318,9 @@ export function App() {
             <input aria-label="Subject" name="subject" placeholder="Subject" required />
             <textarea aria-label="Message" name="message" placeholder="Tell me about the project or opportunity" required rows={5} />
             <button className="button primary" disabled={contactState === "sending"} type="submit">
-              <Mail size={18} /> {contactState === "sending" ? "Sending..." : "Send message"}
+              <Mail size={18} /> {contactState === "sending" ? "Sending..." : hasBackend ? "Send message" : "Open email"}
             </button>
-            {contactState === "sent" && <p className="formStatus success">Message sent successfully.</p>}
+            {contactState === "sent" && <p className="formStatus success">{hasBackend ? "Message sent successfully." : "Email app opened with your message."}</p>}
             {contactState === "error" && <p className="formStatus error">Could not send message. Please try again or email directly.</p>}
           </form>
         </section>
