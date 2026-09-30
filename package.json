@@ -2,7 +2,6 @@
   "name": "portfolio-frontend",
   "private": true,
   "version": "1.0.0",
-  "homepage": "https://albertmugisha.me",
   "type": "module",
   "scripts": {
     "dev": "vite",
